@@ -88,7 +88,7 @@ class Player(pygame.sprite.Sprite):
         self.lives = 5
         self.velocity = 8
         self.bullet_group = bullet_group
-        # TODO: (3/11/2025) assign to self.shoot_sound the sound loaded from player_fire.wav
+        self.shoot_sound = pygame.mixer.Sound("player_fire.wav")
 
     def update(self):
         """Update the player"""
@@ -96,20 +96,31 @@ class Player(pygame.sprite.Sprite):
 
         #Move the player within the bounds of the screen
         if keys[pygame.K_LEFT] and self.rect.left > 0:
-            # TODO: (3/11/2025) subtract self.velocity from self.rect.x
-        # TODO: (3/11/2025) handle pressing K_RIGHT similarly to K_LEFT
+            self.rect.x -= self.velocity
+        if keys[pygame.K_RIGHT] and self.rect.right < 0:
+            self.rect.x += self.velocity
 
     def fire(self):
         """Fire a bullet"""
         #Restrict the number of bullets on screen at a time
         if len(self.bullet_group) < 2:
-            # TODO: (3/11/2025) call self.shoot_sound's play method.
-            # TODO: (3/11/2025) create  PlayerBullet passing in self.rect.centerx, self.rect.top, self.bullet_group
+            self.shoot_sound.play()
+
+    def __init__(self, x, y, group):
+        super().__init__(group)
+        self.image = pygame.Surface((5, 10))
+        self.image.fill((255, 255, 0))
+        self.rect = self.image.get_rect(center=(x, y))
+        self.speed = -10 
+     def update(self):
+        self.rect.y += self.speed
+        if self.rect.bottom < 0:
+            self.kill()
+
 
     def reset(self):
         """Reset the players position"""
-        # TODO: (3/11/2025) assign half of the window width using // to self.rect.centerx
-
+        self.rect.centerx = WINDOW_WIDTH // 2
 
 class Alien(pygame.sprite.Sprite):
     """A class to model an enemy alien"""
@@ -117,29 +128,30 @@ class Alien(pygame.sprite.Sprite):
     def __init__(self, x, y, velocity, bullet_group):
         """Initialize the alien"""
         super().__init__()
-        # TODO: (3/11/2025) assign to self.image an image loaded from alien.png
-        # TODO: (3/11/2025) assign to self.rect the rect from the self.image
+        self.image = pygame.image.load("./assets/images/alien.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         # TODO: (3/11/2025) assign to self.rect.topleft the tuple (x, y)
 
-        # TODO: (3/11/2025) assign to self.starting_x the value of x
-        # TODO: (3/11/2025) repeat for starting_y appropriately.
+        self.starting_x = x
+        self.starting_y = y
 
-        # TODO: (3/11/2025) assign to self.direction the value of 1
-        # TODO: (3/11/2025) assign to self.velocity the value of velocity
+        self.direction = 1
+        self.velocity = velocity
 
         # EXAMPLE:  assign 3 to x means:  x = 3
         # EXAMPLE:  assign to x the value of 3 means x = 3
 
-        # TODO: (3/11/2025) assign to self.bullet_group the bullet_group
+        self.bullet_group = bullet_group
 
-        # TODO: (3/11/2025) assign to self.shoot_sound the value of pygame.mixer.Sound()
-        # TODO: (3/11/2025) (cont.) the sound from the assets folder alien_fire.wav
+        self.shoot_sound = pygame.mixer.Sound("./assets/audio/alien_fire.wav")
 
     def update(self):
         """Update the alien"""
         #Example:  add to x the value of 3
         #Example:  x += 3
-        # TODO: (3/11/2025) add to self.rect.x the value of direction * velocity.  (Don't forget self
+        self.rect.x += self.direction * self.velocity
 
         #Randomly fire a bullet
         if random.randint(0, 1000) > 999 and len(self.bullet_group) < 3:
@@ -152,9 +164,8 @@ class Alien(pygame.sprite.Sprite):
 
     def reset(self):
         """Reset the alien position"""
-        # TODO: (3/11/2025) assign to self.rect.topleft the tuple (self.starting_x, self.starting_y)
-        # TODO: (3/11/2025) assign to self.direction the value of 1
-
+        self.rect.topleft = (self.starting_x, self.starting_y)
+        self.direction = 1
 
 class PlayerBullet(pygame.sprite.Sprite):
     """A class to model a bullet fired by the player"""
@@ -164,17 +175,17 @@ class PlayerBullet(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("./assets/images/green_laser.png")
         self.rect = self.image.get_rect()
-        # TODO: (3/11/2025) assign x to self.rect.centerx
-        # TODO: (3/11/2025) do the same for centery
+        self.rect.centerx = x
+        self.rect.centery = y
 
-        # TODO: (3/11/2025) assign 10 to self.velocity
-        # TODO: (3/11/2025) call bullet_group's add method and pass in self.
+        self.velocity = 10
+        bullet_group.add(self)
 
     def update(self):
         """Update the bullet"""
-        # TODO: (3/11/2025) subtract self.velocity from self.rect.y:
-        # TODO: (3/11/2025) check if self.rect.bottom is less than 0.
-            # TODO: (3/11/2025) the if block will then kill the sprite.
+        self.velocity -= self.rect.y
+        if self.rect.bottom <= 0:
+            self.kill()
 
 
 class AlienBullet(pygame.sprite.Sprite):
@@ -185,16 +196,15 @@ class AlienBullet(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("./assets/images/red_laser.png")
         self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.centery = y
 
-        #TODO: (3/11/2025) assign x to self.rect.centerx
-        #TODO: (3/11/2025) do the same for centery
-
-        #TODO: (3/11/2025) assign 10 to self.velocity
-        #TODO: (3/11/2025) call bullet_group's add method and pass in self.
+        self.velocity = 10
+        bullet_group.add(self)
 
     def update(self):
         """Update the bullet"""
-         #TODO: (3/11/2025) add self.velocity to self.rect.y:  Hint Hint:  +=
+        self.velocity += self.rect.y
 
         if self.rect.top > WINDOW_HEIGHT:
             self.kill()
@@ -204,7 +214,8 @@ class AlienBullet(pygame.sprite.Sprite):
 
 #Create bullet groups
 my_player_bullet_group = pygame.sprite.Group()
-#TODO: repeat for my_alien_bullet_group
+my_alien_bullet_group = pygame.sprite.Group()
+
 
 #Create a player group and Player object
 my_player_group = pygame.sprite.Group()
@@ -212,7 +223,7 @@ my_player = Player(my_player_bullet_group)
 my_player_group.add(my_player)
 
 #Create an alien group.  Will add Alien objects via the game's start new round method
-#TODO: create my_alien_group
+my_alien_group = pygame.sprite.Group()
 
 #Create the Game object
 my_game = Game(my_player, my_alien_group, my_player_bullet_group, my_alien_bullet_group)
